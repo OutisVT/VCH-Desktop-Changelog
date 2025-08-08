@@ -16,6 +16,8 @@ Your new desktop application for staying connected with VCH events and community
 
 ### ✨ What You Can Do
 
+---
+
 **Browse Events Your Way**
 - View upcoming VCH events in three different layouts: Grid, List, or Calendar view
 - Search for specific events by name
@@ -27,8 +29,6 @@ Your new desktop application for staying connected with VCH events and community
 - Build your personal watchlist of must-see events
 - Toggle between viewing all events or just your watchlist
 - Your watchlist saves automatically and stays when you restart the app
-
----
 
 **Explore the Community**
 - Browse public user profiles
@@ -47,7 +47,7 @@ Your new desktop application for staying connected with VCH events and community
 - We don't track your usage or collect personal data
 - Fast, lightweight application that doesn't slow down your computer
 
-
+---
 
 ### 🖥️ Platform Support
 - **Windows**: Windows 10 and newer
