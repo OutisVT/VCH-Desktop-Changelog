@@ -49,6 +49,8 @@ Your new desktop application for staying connected with VCH events and community
 - We don't track your usage or collect personal data
 - Fast, lightweight application that doesn't slow down your computer
 
+---
+
 ### 🖥️ Platform Support
 - **Windows**: Windows 10 and newer
 - **macOS**: macOS 10.15 (Catalina) and newer  

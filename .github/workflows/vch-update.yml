@@ -16,25 +16,22 @@ jobs:
       - name: Split Changelog
         id: changelog
         run: |
-          # Read the changelog content
-          CHANGELOG_CONTENT=$(cat CHANGELOG.md)
+          # Read the changelog and split by sections using "---" as delimiter
           
-          # Split into chunks of 1900 characters each
+          # Part 1: Header and Latest Updates (up to first ---)
           echo "part1<<EOF" >> $GITHUB_OUTPUT
-          echo "${CHANGELOG_CONTENT:0:1900}" >> $GITHUB_OUTPUT
+          awk '/^---$/{if(count==0){count++; print; next} else {exit}} {print}' CHANGELOG.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           
-          if [ ${#CHANGELOG_CONTENT} -gt 1900 ]; then
-            echo "part2<<EOF" >> $GITHUB_OUTPUT
-            echo "${CHANGELOG_CONTENT:1900:1900}" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          fi
+          # Part 2: Version 1.0 section (between first and second ---)
+          echo "part2<<EOF" >> $GITHUB_OUTPUT
+          awk '/^---$/{if(count==0){count++; next} else if(count==1){count++; exit} else {next}} count>=1 {print}' CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           
-          if [ ${#CHANGELOG_CONTENT} -gt 3800 ]; then
-            echo "part3<<EOF" >> $GITHUB_OUTPUT
-            echo "${CHANGELOG_CONTENT:3800}" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          fi
+          # Part 3: Help section (after second ---)
+          echo "part3<<EOF" >> $GITHUB_OUTPUT
+          awk '/^---$/{if(count<2){count++; next} else {found=1; next}} found==1 {print}' CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
         
       - name: Send Changelog Part 1 to Discord
         if: success()
