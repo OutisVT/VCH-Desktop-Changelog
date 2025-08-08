@@ -22,9 +22,7 @@ jobs:
           # Truncate if too long for Discord (Discord has a 2000 character limit per message)
           # We'll take the first 1900 characters and add a clean truncation message
           if [ ${#CHANGELOG_CONTENT} -gt 1900 ]; then
-            CHANGELOG_CONTENT="${CHANGELOG_CONTENT:0:1900}
-
-... *(message truncated due to Discord length limits)*"
+            CHANGELOG_CONTENT="${CHANGELOG_CONTENT:0:1900}"$'\n\n... *(message truncated due to Discord length limits)*'
           fi
           
           # Use GitHub's multiline output format to preserve formatting
