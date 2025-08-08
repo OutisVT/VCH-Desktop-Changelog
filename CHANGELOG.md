@@ -16,8 +16,6 @@ Your new desktop application for staying connected with VCH events and community
 
 ### ✨ What You Can Do
 
----
-
 **Browse Events Your Way**
 - View upcoming VCH events in three different layouts: Grid, List, or Calendar view
 - Search for specific events by name
@@ -65,8 +63,6 @@ Your new desktop application for staying connected with VCH events and community
 - The search bar helps you find events quickly
 - Star events early to keep track of what interests you
 - Check your watchlist regularly so you don't miss important events
-
----
 
 ## Need Help?
 
