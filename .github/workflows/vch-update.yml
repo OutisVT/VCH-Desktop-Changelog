@@ -13,28 +13,55 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Read Changelog
+      - name: Split Changelog
         id: changelog
         run: |
-          # Read the changelog content with proper formatting preserved
+          # Read the changelog content
           CHANGELOG_CONTENT=$(cat CHANGELOG.md)
           
-          # Truncate if too long for Discord (Discord has a 2000 character limit per message)
-          # We'll take the first 1900 characters and add a clean truncation message
+          # Split into chunks of 1900 characters each
+          echo "part1<<EOF" >> $GITHUB_OUTPUT
+          echo "${CHANGELOG_CONTENT:0:1900}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
           if [ ${#CHANGELOG_CONTENT} -gt 1900 ]; then
-            CHANGELOG_CONTENT="${CHANGELOG_CONTENT:0:1900}"$'\n\n... *(message truncated due to Discord length limits)*'
+            echo "part2<<EOF" >> $GITHUB_OUTPUT
+            echo "${CHANGELOG_CONTENT:1900:1900}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           fi
           
-          # Use GitHub's multiline output format to preserve formatting
-          echo "content<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          if [ ${#CHANGELOG_CONTENT} -gt 3800 ]; then
+            echo "part3<<EOF" >> $GITHUB_OUTPUT
+            echo "${CHANGELOG_CONTENT:3800}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
         
-      - name: Send Changelog to Discord
+      - name: Send Changelog Part 1 to Discord
         if: success()
         uses: Ilshidur/action-discord@0.3.2
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
           args: |
-            ${{ steps.changelog.outputs.content }}
+            **📋 VCH Changelog (Part 1/3)**
+            ${{ steps.changelog.outputs.part1 }}
+            
+      - name: Send Changelog Part 2 to Discord
+        if: success() && steps.changelog.outputs.part2 != ''
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: |
+            **📋 VCH Changelog (Part 2/3)**
+            ${{ steps.changelog.outputs.part2 }}
+            
+      - name: Send Changelog Part 3 to Discord
+        if: success() && steps.changelog.outputs.part3 != ''
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: |
+            **📋 VCH Changelog (Part 3/3)**
+            ${{ steps.changelog.outputs.part3 }}
