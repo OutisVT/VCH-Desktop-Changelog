@@ -60,23 +60,47 @@ jobs:
           # Clean up
           rm -f /tmp/changelog_split.txt
         
-      - name: Send Changelog Sections to Discord
-        if: success()
-        run: |
-          TOTAL_SECTIONS="${{ steps.changelog.outputs.total_sections }}"
-          
-          for i in $(seq 0 $((TOTAL_SECTIONS - 1))); do
-            SECTION_VAR="section_${i}"
-            SECTION_CONTENT=$(echo "${{ steps.changelog.outputs }}" | jq -r ".${SECTION_VAR}" 2>/dev/null || echo "")
+      - name: Send Section 0 to Discord
+        if: success() && steps.changelog.outputs.section_0 != ''
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: |
+            ${{ steps.changelog.outputs.section_0 }}
             
-            if [[ -n "$SECTION_CONTENT" && "$SECTION_CONTENT" != "null" ]]; then
-              # Send to Discord using curl
-              curl -H "Content-Type: application/json" \
-                   -X POST \
-                   -d "{\"content\": $(echo "$SECTION_CONTENT" | jq -Rs .)}" \
-                   "${{ secrets.DISCORD_WEBHOOK }}"
-              
-              # Add small delay between messages
-              sleep 2
-            fi
-          done
+      - name: Send Section 1 to Discord
+        if: success() && steps.changelog.outputs.section_1 != ''
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: |
+            ${{ steps.changelog.outputs.section_1 }}
+            
+      - name: Send Section 2 to Discord
+        if: success() && steps.changelog.outputs.section_2 != ''
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: |
+            ${{ steps.changelog.outputs.section_2 }}
+            
+      - name: Send Section 3 to Discord
+        if: success() && steps.changelog.outputs.section_3 != ''
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: |
+            ${{ steps.changelog.outputs.section_3 }}
+            
+      - name: Send Section 4 to Discord
+        if: success() && steps.changelog.outputs.section_4 != ''
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: |
+            ${{ steps.changelog.outputs.section_4 }}
