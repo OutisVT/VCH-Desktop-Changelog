@@ -28,6 +28,8 @@ Your new desktop application for staying connected with VCH events and community
 - Toggle between viewing all events or just your watchlist
 - Your watchlist saves automatically and stays when you restart the app
 
+---
+
 **Explore the Community**
 - Browse public user profiles
 - Search for community members by username
@@ -45,7 +47,7 @@ Your new desktop application for staying connected with VCH events and community
 - We don't track your usage or collect personal data
 - Fast, lightweight application that doesn't slow down your computer
 
----
+
 
 ### 🖥️ Platform Support
 - **Windows**: Windows 10 and newer
