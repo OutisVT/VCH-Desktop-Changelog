@@ -13,52 +13,70 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Split Changelog
+      - name: Split Changelog Dynamically
         id: changelog
         run: |
-          # Read the changelog and split by sections using "---" as delimiter
+          # Split changelog by "---" sections dynamically
           
-          # Part 1: Header and Latest Updates (up to first ---)
-          echo "part1<<EOF" >> $GITHUB_OUTPUT
-          awk '/^---$/{if(count==0){count++; print; next} else {exit}} {print}' CHANGELOG.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Create a temporary file with section markers
+          awk 'BEGIN{section=0} /^---$/{section++; print "SECTION_SPLIT_" section; next} {print}' CHANGELOG.md > /tmp/changelog_split.txt
           
-          # Part 2: Version 1.0 section (between first and second ---)
-          echo "part2<<EOF" >> $GITHUB_OUTPUT
-          awk '/^---$/{if(count==0){count++; next} else if(count==1){count++; exit} else {next}} count>=1 {print}' CHANGELOG.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Count total sections
+          TOTAL_SECTIONS=$(grep -c "SECTION_SPLIT_" /tmp/changelog_split.txt || echo "0")
+          TOTAL_SECTIONS=$((TOTAL_SECTIONS + 1))  # Add 1 for the first section before any ---
           
-          # Part 3: Help section (after second ---)
-          echo "part3<<EOF" >> $GITHUB_OUTPUT
-          awk '/^---$/{if(count<2){count++; next} else {found=1; next}} found==1 {print}' CHANGELOG.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "total_sections=$TOTAL_SECTIONS" >> $GITHUB_OUTPUT
+          
+          # Split into individual sections
+          current_section=0
+          current_content=""
+          
+          while IFS= read -r line; do
+            if [[ $line == SECTION_SPLIT_* ]]; then
+              # Save current section if it has content
+              if [[ -n "$current_content" ]]; then
+                echo "section_${current_section}<<EOF" >> $GITHUB_OUTPUT
+                echo "$current_content" >> $GITHUB_OUTPUT
+                echo "EOF" >> $GITHUB_OUTPUT
+              fi
+              current_section=$((current_section + 1))
+              current_content=""
+            else
+              if [[ -n "$current_content" ]]; then
+                current_content="$current_content"$'\n'"$line"
+              else
+                current_content="$line"
+              fi
+            fi
+          done < /tmp/changelog_split.txt
+          
+          # Save the last section
+          if [[ -n "$current_content" ]]; then
+            echo "section_${current_section}<<EOF" >> $GITHUB_OUTPUT
+            echo "$current_content" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+          
+          # Clean up
+          rm -f /tmp/changelog_split.txt
         
-      - name: Send Changelog Part 1 to Discord
+      - name: Send Changelog Sections to Discord
         if: success()
-        uses: Ilshidur/action-discord@0.3.2
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        with:
-          args: |
-            **📋 VCH Changelog (Part 1/3)**
-            ${{ steps.changelog.outputs.part1 }}
+        run: |
+          TOTAL_SECTIONS="${{ steps.changelog.outputs.total_sections }}"
+          
+          for i in $(seq 0 $((TOTAL_SECTIONS - 1))); do
+            SECTION_VAR="section_${i}"
+            SECTION_CONTENT=$(echo "${{ steps.changelog.outputs }}" | jq -r ".${SECTION_VAR}" 2>/dev/null || echo "")
             
-      - name: Send Changelog Part 2 to Discord
-        if: success() && steps.changelog.outputs.part2 != ''
-        uses: Ilshidur/action-discord@0.3.2
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        with:
-          args: |
-            **📋 VCH Changelog (Part 2/3)**
-            ${{ steps.changelog.outputs.part2 }}
-            
-      - name: Send Changelog Part 3 to Discord
-        if: success() && steps.changelog.outputs.part3 != ''
-        uses: Ilshidur/action-discord@0.3.2
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        with:
-          args: |
-            **📋 VCH Changelog (Part 3/3)**
-            ${{ steps.changelog.outputs.part3 }}
+            if [[ -n "$SECTION_CONTENT" && "$SECTION_CONTENT" != "null" ]]; then
+              # Send to Discord using curl
+              curl -H "Content-Type: application/json" \
+                   -X POST \
+                   -d "{\"content\": $(echo "$SECTION_CONTENT" | jq -Rs .)}" \
+                   "${{ secrets.DISCORD_WEBHOOK }}"
+              
+              # Add small delay between messages
+              sleep 2
+            fi
+          done
