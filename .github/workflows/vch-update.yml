@@ -1,0 +1,40 @@
+name: VCH Update Workflow
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Read Changelog
+        id: changelog
+        run: |
+          # Read the changelog content and format it for Discord
+          CHANGELOG_CONTENT=$(cat CHANGELOG.md)
+          
+          # Truncate if too long for Discord (Discord has a 2000 character limit per message)
+          # We'll take the first 1500 characters to leave room for other content
+          if [ ${#CHANGELOG_CONTENT} -gt 1500 ]; then
+            CHANGELOG_CONTENT="${CHANGELOG_CONTENT:0:1500}..."
+          fi
+          
+          # Escape special characters for JSON
+          CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | sed 's/"/\\"/g' | sed 's/$/\\n/' | tr -d '\n')
+          
+          echo "content=$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+        
+      - name: Send Changelog to Discord
+        if: success()
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: |
+            ${{ steps.changelog.outputs.content }}
