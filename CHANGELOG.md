@@ -2,15 +2,11 @@
 
 Stay up to date with the latest features and improvements to your VCH Event Viewer Desktop Application.
 
----
-
 ## [Latest Updates]
 
 ### Improved
 - **Enhanced Reliability**: Improved connection stability and faster loading times
 - **Login Experience**: Fixed login issues - you can now sign in smoothly with your VCH credentials
-
----
 
 ## [Version 1.0] - Initial Release
 
